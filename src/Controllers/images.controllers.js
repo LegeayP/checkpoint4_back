@@ -30,25 +30,34 @@ const getImages = (req, res) => {
     });
 };
 
-const createOneImages = (req, res, next) => {
+const createOneImages = (req, res) => {
   let { src, alt, bien_id } = req.body;
+  console.log(src, alt, bien_id);
   if (!src) {
     src = req.image.src;
     alt = req.image.alt;
+    bien_id = req.image.bien_id;
   }
+  console.log(src, alt, bien_id);
+
   let validationData = null;
   validationData = Joi.object({
     src: Joi.string().required(),
     alt: Joi.string().required(),
-  }).validate({ src, alt }, { abortEarly: false }).error;
+    bien_id: Joi.required(),
+  }).validate({ src, alt, bien_id }, { abortEarly: false }).error;
+  console.log(validationData, "validation data!!!");
   if (validationData) {
-    console.log(validationData);
-    res.status(500).send("Invalide donné");
+    res.status(500).send("Donnée invalide");
   } else {
     createOne({ src, alt, bien_id })
       .then(([results]) => {
-        req.imagesId = results.insertId;
-        next();
+        res.status(201).json({
+          id: results.insertId,
+          src,
+          alt,
+          bien_id,
+        });
       })
       .catch((err) => {
         res.status(500).send(err.message);
